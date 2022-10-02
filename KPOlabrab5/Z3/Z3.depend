@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1650530390 source:/home/user/KPOlabrab5/Z3/main.cpp
+	<iostream>
+	<map>
+

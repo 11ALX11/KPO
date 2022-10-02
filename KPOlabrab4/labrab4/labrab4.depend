@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1649316961 source:/home/user/KPOlabrab4/labrab4/main.cpp
+	<iostream>
+	<fstream>
+

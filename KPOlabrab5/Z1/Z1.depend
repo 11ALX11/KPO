@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1650525591 source:/home/user/KPOlabrab5/Z1/main.cpp
+	<iostream>
+	<stack>
+

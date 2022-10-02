@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1650528393 source:/home/user/KPOlabrab5/Z2/main.cpp
+	<iostream>
+	<set>
+
