@@ -1,21 +1,18 @@
-#include <iostream>
 #include "Client.h"
 #include "Server.h"
 
-using namespace std;
+//Основы программирования в Linux [Нейл Мэтью]
 
 int main(int argc, char *argv[])
 {
     if (argc > 1) {
         //server
-        cout << "server\n";
-        (new Server())->start();
+        return server_start();
     }
     else {
         //client
-        cout << "client\n";
-        (new Client())->start();
+        return client_start();
     }
 
-    return 0;
+    //return 0;
 }

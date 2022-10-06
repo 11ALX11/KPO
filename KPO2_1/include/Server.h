@@ -1,20 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <iostream>
+int server_start();
+void handle();
 
-using namespace std;
-
-class Server
-{
-    public:
-        Server();
-        int start();
-        virtual ~Server();
-
-    protected:
-
-    private:
-};
 
 #endif // SERVER_H
