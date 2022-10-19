@@ -14,6 +14,13 @@ struct sockaddr_un client_address;
 
 int server_start() {
 
+    setup_socket();
+    handle();
+
+    return 0;
+}
+
+void setup_socket() {
 //2. Удалите все старые сокеты и создайте неименованный сокет для сервера:
 
     unlink("server_socket");
@@ -25,15 +32,11 @@ int server_start() {
     strcpy(server_address.sun_path, "server_socket");
     server_len = sizeof(server_address);
     bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
-
-//4. Создайте очередь запросов на соединение и ждите запроса клиента:
-
-    handle();
-
-    return 0;
 }
 
 void handle() {
+
+//4. Создайте очередь запросов на соединение и ждите запроса клиента:
 
     listen(server_sockfd, 5);
     while(1) {
@@ -47,11 +50,16 @@ void handle() {
 
 //6. Читайте и записывайте данные клиента с помощью client_sockfd:
 
-        read(client_sockfd, &ch, 1);
-        ch++;
-        //parse
-        //and answer
-        write(client_sockfd, &ch, 1);
+        send_requests();
+
         close(client_sockfd);
     }
+}
+
+void send_requests() {
+    read(client_sockfd, &ch, 1);
+    ch++;
+        //parse
+        //and answer
+    write(client_sockfd, &ch, 1);
 }

@@ -7,13 +7,24 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+int sockfd;
+
 int client_start() {
 
-    int sockfd;
+    setup_socket();
+
+    send_requests();
+
+    close(sockfd);
+
+    return 0;
+}
+
+void setup_socket() {
+
     int len;
     struct sockaddr_un address;
     int result;
-    char ch = 'A';
 
 //2. Создайте сокет для клиента:
 
@@ -32,16 +43,14 @@ int client_start() {
         perror("oops : client1");
         exit(1);
     }
+}
+
+void send_requests() {
+    char ch = 'A';
 
 //5. Теперь вы можете читать и писать через sockfd:
 
     write(sockfd, &ch, 1);
     read(sockfd, &ch, 1);
     printf("char from server = %c\n", ch);
-
-    close(sockfd);
-
-    exit(0);
-
-    return 0;
 }
