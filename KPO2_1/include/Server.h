@@ -2,7 +2,7 @@
 #define SERVER_H
 
 int server_start();
-void setup_socket();
+void setup_server_socket();
 void handle();
 void get_requests();
 

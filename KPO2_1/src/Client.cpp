@@ -1,5 +1,10 @@
 #include "Client.h"
 
+#include <iostream>
+
+#include <cstdio>
+#include <cstring>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -11,16 +16,32 @@ int sockfd;
 
 int client_start() {
 
-    setup_socket();
+    setup_client_socket();
 
-    send_requests();
+    char str[1024];
+    int nbytes = ask_string(str);
+    if (nbytes <= 1) {
+        send_requests("Hello server!\n", 14);
+    }
+    else {
+        send_requests(str, nbytes);
+    }
 
     close(sockfd);
 
     return 0;
 }
 
-void setup_socket() {
+int ask_string(char *str) {
+    printf("Enter request (up to 1024 characters):\n");
+    fgets(str, sizeof(str), stdin);
+
+    int i = 0;
+    while (str[i] != '\n' && str[i] != '\0') i++;
+    return ++i;
+}
+
+void setup_client_socket() {
 
     int len;
     struct sockaddr_un address;
@@ -40,17 +61,18 @@ void setup_socket() {
 
     result = connect(sockfd, (struct sockaddr *)&address, len);
     if (result == -1) {
-        perror("oops : client1");
+        perror("Error while connecting to server");
         exit(1);
     }
 }
 
-void send_requests() {
-    char ch = 'A';
+void send_requests(char *send_str, int nbytes) {
+    char ch;
 
 //5. Теперь вы можете читать и писать через sockfd:
 
-    write(sockfd, &ch, 1);
-    read(sockfd, &ch, 1);
-    printf("char from server = %c\n", ch);
+    write(sockfd, send_str, nbytes);
+    while (read(sockfd, &ch, 1)) {
+        printf("%c", ch);
+    }
 }

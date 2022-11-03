@@ -1,5 +1,6 @@
 #include "Server.h"
 
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -14,13 +15,13 @@ struct sockaddr_un client_address;
 
 int server_start() {
 
-    setup_socket();
+    setup_server_socket();
     handle();
 
     return 0;
 }
 
-void setup_socket() {
+void setup_server_socket() {
 //2. Удалите все старые сокеты и создайте неименованный сокет для сервера:
 
     unlink("server_socket");
@@ -40,7 +41,6 @@ void handle() {
 
     listen(server_sockfd, 5);
     while(1) {
-        char ch;
         printf("server waiting\n");
 
 //5. Примите запрос на соединение:
@@ -50,16 +50,28 @@ void handle() {
 
 //6. Читайте и записывайте данные клиента с помощью client_sockfd:
 
-        send_requests();
+        get_requests();
 
         close(client_sockfd);
     }
 }
 
-void send_requests() {
-    read(client_sockfd, &ch, 1);
-    ch++;
-        //parse
+void get_requests() {
+    char ch = '1';
+    char str[1024];
+
+    int n = 0;
+    while(ch != '\0' && ch != '\n') {
+        read(client_sockfd, &ch, 1);
+        str[n++] = ch;
+    }
+
+    //parse
+
+    //CustomDB.h
+    //work_on_request(char *str);
+
         //and answer
-    write(client_sockfd, &ch, 1);
+    char response[255] = "Hello client!\n";
+    write(client_sockfd, response, 255);
 }
