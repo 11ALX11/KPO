@@ -1,4 +1,5 @@
 #include "Server.h"
+#include "CustomDB.h"
 
 #include <iostream>
 #include <sys/types.h>
@@ -69,7 +70,7 @@ void get_requests() {
     //parse
 
     //CustomDB.h
-    //work_on_request(char *str);
+    //response = work_on_request(char *str);
 
         //and answer
     char response[255] = "Hello client!\n";
