@@ -66,13 +66,10 @@ void get_requests() {
         read(client_sockfd, &ch, 1);
         str[n++] = ch;
     }
-
-    //parse
+    str[n++] = '\n';
 
     //CustomDB.h
-    //response = work_on_request(char *str);
+    work_on_request(str); //str = response
 
-        //and answer
-    char response[255] = "Hello client!\n";
-    write(client_sockfd, response, 255);
+    write(client_sockfd, str, strlen(str));
 }
