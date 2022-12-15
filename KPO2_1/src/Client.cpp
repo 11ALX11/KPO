@@ -34,11 +34,20 @@ int client_start() {
 
 int ask_string(char *str) {
     printf("Enter request (up to 1024 characters):\n");
-    fgets(str, sizeof(str), stdin);
+    
+    //fgets(str, sizeof(str), stdin);
+    //read(0, str, 1024);
+    int i = 0; char chr;
+    while (read(0, &chr, 1)) {
+        str[i++] = chr;
+        if (chr == '\n') {
+            break;
+        }
+    }
+    str[i++] = '\0';
 
-    int i = 0;
-    while (str[i] != '\n' && str[i] != '\0') i++;
-    return ++i;
+    //while (str[i] != '\n' && str[i] != '\0') i++;
+    return i;
 }
 
 void setup_client_socket() {
