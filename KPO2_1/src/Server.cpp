@@ -68,8 +68,12 @@ void get_requests() {
     }
     str[n++] = '\n'; str[n++] = '\0';
 
+    printf("Request: %s\n", str);
+
     //CustomDB.h
     work_on_request(str); //str = response
+
+    printf("Response:\n%s", str);
 
     write(client_sockfd, str, strlen(str));
 }
