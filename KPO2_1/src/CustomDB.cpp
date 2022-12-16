@@ -20,6 +20,8 @@ void work_on_request(char* str) {
         where_pos = strstr(str, "WHERE")-str;
     }
 
+
+    //SELECT
     if (strstr(str, "SELECT")-str == 0) {
         bool s_flag = false; // *_flag
         bool id_flag = false;
@@ -28,8 +30,6 @@ void work_on_request(char* str) {
 
         int nbuf = 0;
         char buf[1024];
-
-        
 
         //Columns
         if (strstr(str, "*")-str > 0 && strstr(str, "*")-str < where_pos) {
@@ -44,8 +44,6 @@ void work_on_request(char* str) {
         if (strstr(str, "code")-str > 0 && strstr(str, "code")-str < where_pos) {
             code_flag = true;
         }
-
-        //...
 
         if (!s_flag && !id_flag && !name_flag && !code_flag) {
             strcpy(str, "Invalid SELECT: no columns.\n\0");
@@ -225,6 +223,9 @@ void work_on_request(char* str) {
         strcpy(str, buf);
         return;
     }
+
+
+    //INSERT
     else if (strstr(str, "INSERT")-str == 0) {
         int col = 0; int i = 6;
         char buf[1024]; int nbuf = 0;
@@ -261,8 +262,10 @@ void work_on_request(char* str) {
         close(fd);
         
         strcpy(str, "Ok.\n\0");
-        return;
     }
+
+
+    //DELETE
     else if (strstr(str, "DELETE")-str == 0) {
         int nbuf = 0;
         char buf[1024];
@@ -422,16 +425,96 @@ void work_on_request(char* str) {
         close(fd);
         
         strcpy(str, "Ok.\n\0");
-        return;
-
     }
+
+
+    //UPDATE
     else if (strstr(str, "UPDATE")-str == 0) {
+        bool id_flag = false;
+        bool name_flag = false;
+        bool code_flag = false;
 
+        int set_pos = strstr(str, "SET")-str;
+        
+        if ( !( (set_pos > 0) && (set_pos < strlen(str)) ) ) {
+            strcpy(str, "Mising SET.\n\0");
+            return;
+        }
+
+
+        int nid_word = 0;
+        char id_word[64];
+        if (strstr(str, "id")-str > set_pos && strstr(str, "id")-str < where_pos) {
+            id_flag = true;
+
+            int i = strstr(str, "id")-str+2;
+            while (1) {
+                if (str[i] == ' ' || str[i] == '\t' || str[i] ==  '=') {
+                    if (!(nid_word > 0)) {
+                        i++;
+                        continue;
+                    }
+
+                    break;
+                }
+                else {
+                    id_word[nid_word++] = str[i++];
+                }
+            }
+        }
+        int nname_word = 0;
+        char name_word[64];
+        if (strstr(str, "name")-str > set_pos && strstr(str, "name")-str < where_pos) {
+            name_flag = true;
+
+            int i = strstr(str, "name")-str+4;
+            while (1) {
+                if (str[i] == ' ' || str[i] == '\t' || str[i] ==  '=') {
+                    if (!(nname_word > 0)) {
+                        i++;
+                        continue;
+                    }
+
+                    break;
+                }
+                else {
+                    name_word[nname_word++] = str[i++];
+                }
+            }
+        }
+        int ncode_word = 0;
+        char code_word[64];
+        if (strstr(str, "code")-str > set_pos && strstr(str, "code")-str < where_pos) {
+            code_flag = true;
+
+            int i = strstr(str, "code")-str+4;
+            while (1) {
+                if (str[i] == ' ' || str[i] == '\t' || str[i] ==  '=') {
+                    if (!(ncode_word > 0)) {
+                        i++;
+                        continue;
+                    }
+
+                    break;
+                }
+                else {
+                    code_word[ncode_word++] = str[i++];
+                }
+            }
+        }
+
+        if (!id_flag && !name_flag && !code_flag) {
+            strcpy(str, "Invalid SET: no columns.\n\0");
+            return;
+        }
+
+        
+
+        strcpy(str, "Ok.\n\0");
     }
+
+
     else {
         strcpy(str, "Unknown command.\n\0");
-        return;
     }
-
-    str[nresp++] = '\0';
 }
