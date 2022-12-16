@@ -1,2 +1,9 @@
-12 name code_flag
-1 name2 code
+13	tyt	cd
+14	ytu	54
+15	yutu	545
+16	ytu	544
+4	4	4
+5	4	4
+3	ty	rock
+1	name	code
+2	name2	code_flag

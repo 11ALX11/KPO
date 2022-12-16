@@ -12,22 +12,24 @@
 
 void work_on_request(char* str) {
     int nresp = 0;
+    
+    bool where_flag = false;
+    int where_pos = 3000;
+    if (strstr(str, "WHERE")-str > 0 && strstr(str, "WHERE")-str < where_pos) {
+        where_flag = true;
+        where_pos = strstr(str, "WHERE")-str;
+    }
 
     if (strstr(str, "SELECT")-str == 0) {
         bool s_flag = false; // *_flag
         bool id_flag = false;
         bool name_flag = false;
         bool code_flag = false;
-        bool where_flag = false;
-        int where_pos = 3000;
 
         int nbuf = 0;
         char buf[1024];
 
-        if (strstr(str, "WHERE")-str > 0 && strstr(str, "WHERE")-str < where_pos) {
-            where_flag = true;
-            where_pos = strstr(str, "WHERE")-str;
-        }
+        
 
         //Columns
         if (strstr(str, "*")-str > 0 && strstr(str, "*")-str < where_pos) {
@@ -58,7 +60,7 @@ void work_on_request(char* str) {
 
         int col = 0;
         while (read(fd, &chr, 1)) {
-            if (chr == ' ') {
+            if (chr == ' ' || chr == '\t') {
                 col++;
                 buf[nbuf++] = '\t';
                 continue;
@@ -84,26 +86,26 @@ void work_on_request(char* str) {
         buf[nbuf++] = '\0';
 
         //WHERE
-        if (strstr(str, "id")-str > where_pos && strstr(str, "id")-str < strlen(str)) {
-            if (!(id_flag || s_flag)) {
-                strcpy(str, "Wrong WHERE: column isnt selected.\n\0");
-                return;
-            }
-        }
-        if (strstr(str, "name")-str > where_pos && strstr(str, "name")-str < strlen(str)) {
-            if (!(name_flag || s_flag)) {
-                strcpy(str, "Wrong WHERE: column isnt selected.\n\0");
-                return;
-            }
-        }
-        if (strstr(str, "code")-str > where_pos && strstr(str, "code")-str < strlen(str)) {
-            if (!(code_flag || s_flag)) {
-                strcpy(str, "Wrong WHERE: column isnt selected.\n\0");
-                return;
-            }
-        }
-
         if (where_flag) {
+            if (strstr(str, "id")-str > where_pos && strstr(str, "id")-str < strlen(str)) {
+                if (!(id_flag || s_flag)) {
+                    strcpy(str, "Wrong WHERE: column isnt selected.\n\0");
+                    return;
+                }
+            }
+            if (strstr(str, "name")-str > where_pos && strstr(str, "name")-str < strlen(str)) {
+                if (!(name_flag || s_flag)) {
+                    strcpy(str, "Wrong WHERE: column isnt selected.\n\0");
+                    return;
+                }
+            }
+            if (strstr(str, "code")-str > where_pos && strstr(str, "code")-str < strlen(str)) {
+                if (!(code_flag || s_flag)) {
+                    strcpy(str, "Wrong WHERE: column isnt selected.\n\0");
+                    return;
+                }
+            }
+
             id_flag = false;
             name_flag = false;
             code_flag = false;
@@ -224,7 +226,42 @@ void work_on_request(char* str) {
         return;
     }
     else if (strstr(str, "INSERT")-str == 0) {
+        int col = 0; int i = 6;
+        char buf[1024]; int nbuf = 0;
+        do {
+            i++;
+            if (str[i] == ' ' || str[i] == ',') {
+                if (nbuf > 0 && buf[nbuf-1] != '\t') {
+                    buf[nbuf++] = '\t';
+                    col++;
+                }
+                continue;
+            }
 
+            buf[nbuf++] = str[i];
+
+            if (col > 2) {
+                strcpy(str, "Wrong amount of columns.\n\0");
+                return;
+            }
+        } while (i < where_pos && str[i] != '\n' && str[i] != '\0');
+        if (col < 2) {
+            strcpy(str, "Wrong amount of columns.\n\0");
+            return;
+        }
+
+        int fd;
+        if ((fd = open("db.txt", O_CREAT | O_WRONLY | O_APPEND, 0666)) < 0) {
+            perror("Error opening db!");
+            exit(-1);
+        }
+
+        write(fd, buf, nbuf);
+
+        close(fd);
+        
+        strcpy(str, "Ok.\n\0");
+        return;
     }
     else if (strstr(str, "DELETE")-str == 0) {
 
