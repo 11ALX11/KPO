@@ -2,7 +2,7 @@
 
 /*  table
     id      name    code
-    (text)  (text)  (text)
+    (int)  (text)  (text)
 */
 
 #include <string.h>
@@ -133,19 +133,41 @@ void work_on_request(char* str) {
                                 if (nword2 > 0) {
                                     word2[nword2++] = '\0';
                                     
-                                    if (eq) {
-                                        if (strcmp(word, word2) == 0) {
-                                            true_clause = true;
+                                    if (col != 0) {
+                                        if (eq) {
+                                            if (strcmp(word, word2) == 0) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (mr) {
+                                            if (strcmp(word, word2) < 0) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (ls) {
+                                            if (strcmp(word, word2) > 0) {
+                                                true_clause = true;
+                                            }
                                         }
                                     }
-                                    else if (mr) {
-                                        if (strcmp(word, word2) < 0) {
-                                            true_clause = true;
+                                    else {
+                                        int num1 = atoi(word);
+                                        int num2 = atoi(word2);
+
+                                        if (eq) {
+                                            if (num1 == num2) {
+                                                true_clause = true;
+                                            }
                                         }
-                                    }
-                                    else if (ls) {
-                                        if (strcmp(word, word2) > 0) {
-                                            true_clause = true;
+                                        else if (mr) {
+                                            if (num1 < num2) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (ls) {
+                                            if (num1 > num2) {
+                                                true_clause = true;
+                                            }
                                         }
                                     }
 
@@ -243,7 +265,7 @@ void work_on_request(char* str) {
             int nsort_column = 0;
             int i = order_by_pos+8;
             while (1) {
-                if (str[i] == ' ' || str[i] == '\t') {
+                if (str[i] == ' ' || str[i] == '\t' || str[i] == '\n') {
                     if (!(nsort_column > 0)) {
                         i++;
                         continue;
@@ -360,21 +382,46 @@ void work_on_request(char* str) {
                         // printf("[%d]\t%s", p, arr[p]);
                     // }
 
-                    if (ASC_ORDER) {
-                        // printf("%s\t%s\t%d\t%d\n", col1, col2, strcmp(col1, col2), j);
-                        if (strcmp(col1, col2) < 0) {
-                            // tmp = arr_of_idx[j+1];
-                            // arr_of_idx[j+1] = arr_of_idx[j];
-                            // arr_of_idx[j] = tmp;
-                            std::swap(arr[j], arr[j+1]);
+                    if (!id_flag) {
+                        if (ASC_ORDER) {
+                            // printf("%s\t%s\t%d\t%d\n", col1, col2, strcmp(col1, col2), j);
+                            if (strcmp(col1, col2) < 0) {
+                                // tmp = arr_of_idx[j+1];
+                                // arr_of_idx[j+1] = arr_of_idx[j];
+                                // arr_of_idx[j] = tmp;
+                                std::swap(arr[j], arr[j+1]);
+                            }
+                        }
+                        else {
+                            if (strcmp(col1, col2) > 0) {
+                                // tmp = arr_of_idx[j+1];
+                                // arr_of_idx[j+1] = arr_of_idx[j];
+                                // arr_of_idx[j] = tmp;
+                                std::swap(arr[j], arr[j+1]);
+                            }
                         }
                     }
                     else {
-                        if (strcmp(col1, col2) > 0) {
-                            // tmp = arr_of_idx[j+1];
-                            // arr_of_idx[j+1] = arr_of_idx[j];
-                            // arr_of_idx[j] = tmp;
-                            std::swap(arr[j], arr[j+1]);
+                        int num1 = atoi(col1);
+                        int num2 = atoi(col2);
+
+                        if (ASC_ORDER) {
+                            // printf("%s\t%s\t%d\t%d\n", col1, col2, strcmp(col1, col2), j);
+
+                            if (num1 > num2) {
+                                // tmp = arr_of_idx[j+1];
+                                // arr_of_idx[j+1] = arr_of_idx[j];
+                                // arr_of_idx[j] = tmp;
+                                std::swap(arr[j], arr[j+1]);
+                            }
+                        }
+                        else {
+                            if (num1 < num2) {
+                                // tmp = arr_of_idx[j+1];
+                                // arr_of_idx[j+1] = arr_of_idx[j];
+                                // arr_of_idx[j] = tmp;
+                                std::swap(arr[j], arr[j+1]);
+                            }
                         }
                     }
                 }
@@ -404,6 +451,13 @@ void work_on_request(char* str) {
             i++;
             if (str[i] == ' ' || str[i] == ',') {
                 if (nbuf > 0 && buf[nbuf-1] != '\t') {
+                    if (col == 1) {
+                        buf[nbuf] = '\0';
+                        if (atoi(buf) == 0) {
+                            strcpy(str, "Id must be an integer (also not 0).\n\0");
+                            return;
+                        }
+                    }
                     buf[nbuf++] = '\t';
                     col++;
                 }
@@ -496,19 +550,41 @@ void work_on_request(char* str) {
                                 if (nword2 > 0) {
                                     word2[nword2++] = '\0';
                                     
-                                    if (eq) {
-                                        if (strcmp(word, word2) == 0) {
-                                            true_clause = true;
+                                    if (col != 0) {
+                                        if (eq) {
+                                            if (strcmp(word, word2) == 0) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (mr) {
+                                            if (strcmp(word, word2) < 0) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (ls) {
+                                            if (strcmp(word, word2) > 0) {
+                                                true_clause = true;
+                                            }
                                         }
                                     }
-                                    else if (mr) {
-                                        if (strcmp(word, word2) < 0) {
-                                            true_clause = true;
+                                    else {
+                                        int num1 = atoi(word);
+                                        int num2 = atoi(word2);
+
+                                        if (eq) {
+                                            if (num1 == num2) {
+                                                true_clause = true;
+                                            }
                                         }
-                                    }
-                                    else if (ls) {
-                                        if (strcmp(word, word2) > 0) {
-                                            true_clause = true;
+                                        else if (mr) {
+                                            if (num1 < num2) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (ls) {
+                                            if (num1 > num2) {
+                                                true_clause = true;
+                                            }
                                         }
                                     }
 
@@ -632,6 +708,12 @@ void work_on_request(char* str) {
                     id_word[nid_word++] = str[i++];
                 }
             }
+
+            id_word[nid_word] = '\0';
+            if (atoi(id_word) == 0) {
+                strcpy(str, "Id must be an integer (also not 0).\n\0");
+                return;
+            }
         }
 
         int nname_word = 0;
@@ -742,19 +824,41 @@ void work_on_request(char* str) {
                                 if (nword2 > 0) {
                                     word2[nword2++] = '\0';
                                     
-                                    if (eq) {
-                                        if (strcmp(word, word2) == 0) {
-                                            true_clause = true;
+                                    if (col != 0) {
+                                        if (eq) {
+                                            if (strcmp(word, word2) == 0) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (mr) {
+                                            if (strcmp(word, word2) < 0) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (ls) {
+                                            if (strcmp(word, word2) > 0) {
+                                                true_clause = true;
+                                            }
                                         }
                                     }
-                                    else if (mr) {
-                                        if (strcmp(word, word2) < 0) {
-                                            true_clause = true;
+                                    else {
+                                        int num1 = atoi(word);
+                                        int num2 = atoi(word2);
+
+                                        if (eq) {
+                                            if (num1 == num2) {
+                                                true_clause = true;
+                                            }
                                         }
-                                    }
-                                    else if (ls) {
-                                        if (strcmp(word, word2) > 0) {
-                                            true_clause = true;
+                                        else if (mr) {
+                                            if (num1 < num2) {
+                                                true_clause = true;
+                                            }
+                                        }
+                                        else if (ls) {
+                                            if (num1 > num2) {
+                                                true_clause = true;
+                                            }
                                         }
                                     }
 
