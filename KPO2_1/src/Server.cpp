@@ -66,7 +66,7 @@ void get_requests() {
         read(client_sockfd, &ch, 1);
         str[n++] = ch;
     }
-    str[n++] = '\n'; str[n++] = '\0';
+    str[n++] = ' '; str[n++] = '\n'; str[n++] = '\0';
 
     printf("Request: %s\n", str);
 

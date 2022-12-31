@@ -430,14 +430,14 @@ void work_on_request(char* str) {
 
     //UPDATE
     else if (strstr(str, "UPDATE")-str == 0) {
-        bool id_flag = false;
-        bool name_flag = false;
-        bool code_flag = false;
+        bool id_sflag = false;
+        bool name_sflag = false;
+        bool code_sflag = false;
 
         int set_pos = strstr(str, "SET")-str;
         
         if ( !( (set_pos > 0) && (set_pos < strlen(str)) ) ) {
-            strcpy(str, "Mising SET.\n\0");
+            strcpy(str, "Misding SET.\n\0");
             return;
         }
 
@@ -445,7 +445,7 @@ void work_on_request(char* str) {
         int nid_word = 0;
         char id_word[64];
         if (strstr(str, "id")-str > set_pos && strstr(str, "id")-str < where_pos) {
-            id_flag = true;
+            id_sflag = true;
 
             int i = strstr(str, "id")-str+2;
             while (1) {
@@ -462,10 +462,11 @@ void work_on_request(char* str) {
                 }
             }
         }
+
         int nname_word = 0;
         char name_word[64];
         if (strstr(str, "name")-str > set_pos && strstr(str, "name")-str < where_pos) {
-            name_flag = true;
+            name_sflag = true;
 
             int i = strstr(str, "name")-str+4;
             while (1) {
@@ -482,10 +483,11 @@ void work_on_request(char* str) {
                 }
             }
         }
+
         int ncode_word = 0;
         char code_word[64];
         if (strstr(str, "code")-str > set_pos && strstr(str, "code")-str < where_pos) {
-            code_flag = true;
+            code_sflag = true;
 
             int i = strstr(str, "code")-str+4;
             while (1) {
@@ -503,12 +505,225 @@ void work_on_request(char* str) {
             }
         }
 
-        if (!id_flag && !name_flag && !code_flag) {
+        if (!id_sflag && !name_sflag && !code_sflag) {
             strcpy(str, "Invalid SET: no columns.\n\0");
             return;
         }
 
+        //WHERE
+        if (where_flag) {
+            int nbuf = 0;
+            char buf[1024];
+
+            // geting bufer
+            int fd; char chr;
+            if ((fd = open("db.txt", O_CREAT | O_RDWR, 0666)) < 0) {
+                perror("Error opening db!");
+                exit(-1);
+            }
+
+            int col = 0;
+            while (read(fd, &chr, 1)) {
+                if (chr == ' ' || chr == '\t') {
+                    col++;
+                    buf[nbuf++] = '\t';
+                    continue;
+                }
+                if (chr == '\n') {
+                    col = 0;
+                    buf[nbuf++] = '\n';
+                    continue;
+                }
+
+                buf[nbuf++] = chr;
+            }
+
+            close(fd);
+            buf[nbuf++] = '\0';
+            
+            bool id_flag = false;
+            bool name_flag = false;
+            bool code_flag = false;
+
+            bool eq = false;    // =
+            bool mr = false;    // >
+            bool ls = false;    // <
+
+            int l = where_pos+5;
+            char word[64]; int nword = 0;
+            do {
+                l++;
+                if (str[l] == ' ' || str[l] == '\t' || str[l] == '\n' || str[l] == '\0') {
+                    word[nword++] = '\0';
+
+                    if ((id_flag || name_flag || code_flag) && (eq || mr || ls)) {
+                        char buf2[1024]; int nbuf2 = 0;
+                        char word2[64]; int nword2 = 0;
+                        char id_word2[64]; int nid_word2 = 0;
+                        char name_word2[64]; int nname_word2 = 0;
+                        char code_word2[64]; int ncode_word2 = 0;
+
+                        bool true_clause = false;
+
+                        int i = 0; int j = 0; int col = 0;
+                        while (buf[i] != '\0') {
+                            if (buf[i] == ' ' || buf[i] == '\t' || buf[i] == '\n') {
+                                if (nword2 > 0) {
+                                    word2[nword2++] = '\0';
+                                    
+                                    if (eq) {
+                                        if (strcmp(word, word2) == 0) {
+                                            true_clause = true;
+                                        }
+                                    }
+                                    else if (mr) {
+                                        if (strcmp(word, word2) < 0) {
+                                            true_clause = true;
+                                        }
+                                    }
+                                    else if (ls) {
+                                        if (strcmp(word, word2) > 0) {
+                                            true_clause = true;
+                                        }
+                                    }
+
+                                    nword2 = 0;
+                                }
+
+                                col++;
+                            }
+                            if (buf[i] == '\n') {
+                                if (true_clause) {
+                                    if (id_sflag) {
+                                        for (int k = 0; k < nid_word; k++) {
+                                            buf2[nbuf2++] = id_word[k];
+                                        }
+                                    }
+                                    else {
+                                        for (int k = 0; k < nid_word2; k++) {
+                                            buf2[nbuf2++] = id_word2[k];
+                                        }
+                                    }
+                                    buf2[nbuf2++] = '\t';
+
+                                    if (name_sflag) {
+                                        for (int k = 0; k < nname_word; k++) {
+                                            buf2[nbuf2++] = name_word[k];
+                                        }
+                                    }
+                                    else {
+                                        for (int k = 0; k < nname_word2; k++) {
+                                            buf2[nbuf2++] = name_word2[k];
+                                        }
+                                    }
+                                    buf2[nbuf2++] = '\t';
+
+                                    if (code_sflag) {
+                                        for (int k = 0; k < ncode_word; k++) {
+                                            buf2[nbuf2++] = code_word[k];
+                                        }
+                                    }
+                                    else {
+                                        for (int k = 0; k < ncode_word2; k++) {
+                                            buf2[nbuf2++] = code_word2[k];
+                                        }
+                                    }
+                                    buf2[nbuf2++] = '\n';
+                                }
+                                else {
+                                    for (int k = j; k <= i; k++) {
+                                        buf2[nbuf2++] = buf[k];
+                                    }
+                                }
+
+                                j = i+1;
+                                col = 0;
+                                nid_word2 = 0;
+                                nname_word2 = 0;
+                                ncode_word2 = 0;
+                                true_clause = false;
+                            }
+
+                            if (!(buf[i] == ' ' || buf[i] == '\t' || buf[i] == '\n')) {
+                                if (col == 0) {
+                                    id_word2[nid_word2++] = buf[i];
+
+                                    if (id_flag) {
+                                        word2[nword2++] = buf[i];
+                                    }
+                                }
+                                if (col == 1) {
+                                    name_word2[nname_word2++] = buf[i];
+
+                                    if (name_flag) {
+                                        word2[nword2++] = buf[i];
+                                    }
+                                }
+                                if (col == 2) {
+                                    code_word2[ncode_word2++] = buf[i];
+
+                                    if (code_flag) {
+                                        word2[nword2++] = buf[i];
+                                    }
+                                }
+                            }
+
+                            i++;
+                        }
+                        buf2[nbuf2++] = '\0';
+
+                        id_flag = false;
+                        name_flag = false;
+                        code_flag = false;
+
+                        eq = false;
+                        mr = false;
+                        ls = false;
+
+                        strcpy(buf, buf2);
+                    }
+
+                    if (strcmp(word, "id") == 0) {
+                        id_flag = true;
+                    }
+                    if (strcmp(word, "name") == 0) {
+                        name_flag = true;
+                    }
+                    if (strcmp(word, "code") == 0) {
+                        code_flag = true;
+                    }
+
+                    if (strcmp(word, "=") == 0) {
+                        eq = true;
+                    }
+                    if (strcmp(word, ">") == 0) {
+                        mr = true;
+                    }
+                    if (strcmp(word, "<") == 0) {
+                        ls = true;
+                    }
+
+                    nword = 0;
+                    continue;
+                }
+
+                word[nword++] = str[l];
+
+            } while (str[l] != '\n' && str[l] != '\0');
         
+            if ((fd = open("db.txt", O_CREAT | O_WRONLY | O_TRUNC, 0666)) < 0) {
+                perror("Error opening db!");
+                exit(-1);
+            }
+
+            write(fd, buf, strlen(buf));
+
+            close(fd);
+        }
+        else {
+            strcpy(str, "Missing WHERE clasue.\n\0");
+            return;
+        }
 
         strcpy(str, "Ok.\n\0");
     }
