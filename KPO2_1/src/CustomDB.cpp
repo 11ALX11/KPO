@@ -2,6 +2,7 @@
 
 /*  table
     id      name    code
+    (text)  (text)  (text)
 */
 
 #include <string.h>
@@ -9,6 +10,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <iostream>
 
 void work_on_request(char* str) {
     int nresp = 0;
@@ -218,6 +220,175 @@ void work_on_request(char* str) {
                 word[nword++] = str[l];
 
             } while (str[l] != '\n' && str[l] != '\0');
+        }
+
+
+        //ORDER BY
+        int order_by_pos = strstr(str, "ORDER BY")-str;
+        if (order_by_pos > 0 && order_by_pos < strlen(str)) {
+
+            id_flag = false;
+            name_flag = false;
+            code_flag = false;
+
+            bool ASC_ORDER = true;
+            bool DESC_ORDER = false;
+
+            if ( strstr(str, "DESC")-str > order_by_pos && strstr(str, "DESC")-str < strlen(str) ) {
+                ASC_ORDER = false;
+                DESC_ORDER = true;
+            }
+            
+            char sort_column[64];
+            int nsort_column = 0;
+            int i = order_by_pos+8;
+            while (1) {
+                if (str[i] == ' ' || str[i] == '\t') {
+                    if (!(nsort_column > 0)) {
+                        i++;
+                        continue;
+                    }
+
+                    break;
+                }
+                else {
+                    sort_column[nsort_column++] = str[i++];
+                }
+            }
+            sort_column[nsort_column++] = '\0';
+
+            if (strcmp(sort_column, "id") == 0) {
+                id_flag = true;
+            }
+            if (strcmp(sort_column, "name") == 0) {
+                name_flag = true;
+            }
+            if (strcmp(sort_column, "code") == 0) {
+                code_flag = true;
+            }
+
+            if ( !(id_flag || name_flag || code_flag) ) {
+                strcpy(str, "ORDER BY: no column.\n\0");
+                return;
+            }
+
+            char arr[255][1024];
+            // int arr_of_idx[255];
+
+            int n = 0; int j = 0; i = 0;
+            int chr = buf[i];
+            while (chr != '\0') {
+                chr = buf[i++];
+
+                if (chr == ' ' || chr == '\t') {
+                    col++;
+                    arr[n][j++] = '\t';
+                    continue;
+                }
+                if (chr == '\n') {
+                    col = 0;
+                    arr[n][j++] = '\n';
+                    arr[n][j++] = '\0';
+                    j = 0;
+                    n++;
+                    continue;
+                }
+
+                arr[n][j++] = chr;
+            }
+
+            // for (int p = 0; p < n; p++) {
+                // arr_of_idx[p] = p;
+            // }
+
+            int tmp;
+            char col1[64]; char col2[64];
+            int ncol1 = 0; int ncol2 = 0;
+            for (i = 0; i < n; i++) {
+                for (j = 0; j+1 < n; j++) {
+                    col = 0; ncol1 = 0; int k = 0;
+                    while (arr[j][k] != '\0') {
+                        if (arr[j][k] == ' ' || arr[j][k] == '\t') {
+                            col++; k++;
+                            continue;
+                        }
+                        if (arr[j][k] == '\n') {
+                            col = 0; k++;
+                            continue;
+                        }
+
+                        if (col == 0 && (id_flag)) {
+                            col1[ncol1++] = arr[j][k];
+                        }
+                        if (col == 1 && (name_flag)) {
+                            col1[ncol1++] = arr[j][k];
+                        }
+                        if (col == 2 && (code_flag)) {
+                            col1[ncol1++] = arr[j][k];
+                        }
+
+                        k++;
+                    }
+                    col1[ncol1++] = '\0';
+
+                    col = 0; ncol2 = 0; k = 0;
+                    while (arr[j+1][k] != '\0') {
+                        if (arr[j+1][k] == ' ' || arr[j+1][k] == '\t') {
+                            col++; k++;
+                            continue;
+                        }
+                        if (arr[j+1][k] == '\n') {
+                            col = 0; k++;
+                            continue;
+                        }
+
+                        if (col == 0 && (id_flag)) {
+                            col2[ncol2++] = arr[j+1][k];
+                        }
+                        if (col == 1 && (name_flag)) {
+                            col2[ncol2++] = arr[j+1][k];
+                        }
+                        if (col == 2 && (code_flag)) {
+                            col2[ncol2++] = arr[j+1][k];
+                        }
+
+                        k++;
+                    }
+                    col2[ncol2++] = '\0';
+
+                    // for (int p = 0; p < n; p++) {
+                        // printf("[%d]\t%s", p, arr[p]);
+                    // }
+
+                    if (ASC_ORDER) {
+                        // printf("%s\t%s\t%d\t%d\n", col1, col2, strcmp(col1, col2), j);
+                        if (strcmp(col1, col2) < 0) {
+                            // tmp = arr_of_idx[j+1];
+                            // arr_of_idx[j+1] = arr_of_idx[j];
+                            // arr_of_idx[j] = tmp;
+                            std::swap(arr[j], arr[j+1]);
+                        }
+                    }
+                    else {
+                        if (strcmp(col1, col2) > 0) {
+                            // tmp = arr_of_idx[j+1];
+                            // arr_of_idx[j+1] = arr_of_idx[j];
+                            // arr_of_idx[j] = tmp;
+                            std::swap(arr[j], arr[j+1]);
+                        }
+                    }
+                }
+            }
+
+            nbuf = 0; j = 0;
+            for (int p = 0; p < n;) {
+                buf[nbuf++] = arr[p][j++];
+                if (arr[p][j] == '\0') {
+                    p++; j = 0;
+                }
+            }
+            buf[nbuf++] = '\0';
+
         }
 
         strcpy(str, buf);
@@ -437,7 +608,7 @@ void work_on_request(char* str) {
         int set_pos = strstr(str, "SET")-str;
         
         if ( !( (set_pos > 0) && (set_pos < strlen(str)) ) ) {
-            strcpy(str, "Misding SET.\n\0");
+            strcpy(str, "Missing SET.\n\0");
             return;
         }
 
